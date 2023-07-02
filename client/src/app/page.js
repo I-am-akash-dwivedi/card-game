@@ -19,7 +19,7 @@ import {
 import Card from "@/app/components/card";
 import PlayersInRoom from "@/app/components/players-in-room";
 
-const socket_url = process.env.SOCKET_URL || 'http://card-game-server-lxj5.onrender.com';
+const socket_url = process.env.SOCKET_URL || 'https://card-game-server-lxj5.onrender.com';
 // const socket = io("http://localhost:4000");
 const socket = io(socket_url);
 
