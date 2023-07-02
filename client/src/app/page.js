@@ -18,7 +18,6 @@ import {
 } from "@/app/utils/utils";
 import Card from "@/app/components/card";
 import PlayersInRoom from "@/app/components/players-in-room";
-import {sendMessage} from "next/dist/client/dev/error-overlay/websocket";
 
 const socket_url = process.env.SOCKET_URL || 'http://card-game-server-lxj5.onrender.com';
 // const socket = io("http://localhost:4000");
@@ -50,7 +49,7 @@ export default function Home() {
   const sendMessage = () => {
     const msg_payload = {
       'player_id': playerId,
-      'msg': msg,
+      'msg': message,
       'name': name
     }
     socket.emit('send-message', roomId, msg_payload)
@@ -73,8 +72,9 @@ export default function Home() {
     socket.on('roomCreated', (roomId, hostName) => {
       setIsRoomCreated(true);
       setRoomId(roomId);
-      let updatedPlayers = [...players, hostName]
-      setPlayers(updatedPlayers)
+      // let updatedPlayers = [...players, hostName]
+      // setPlayers(updatedPlayers)
+      setPlayers((prevPlayers) => [...prevPlayers, hostName])
       toast.success('Room created!');
     });
 
@@ -112,7 +112,7 @@ export default function Home() {
     return () => {
       socket.disconnect();
     };
-  }, [players]);
+  }, []);
 
   const saveStateToLocalStorage = (key, state) => {
     try {
@@ -185,7 +185,7 @@ export default function Home() {
 
   const handleCreateRoom = () => {
     socket.emit('createRoom', name);
-    setPlayers((prevPlayers) => [...prevPlayers, name]);
+    // setPlayers((prevPlayers) => [...prevPlayers, name]);
     // setPlayers([name])
   };
 
@@ -284,7 +284,6 @@ export default function Home() {
       playerDetails[player_id].card_used.push(thisTurnCard)
     }
     if (thisTurnCards.length === player_ids.length && thisTurnCards.length !== 0) {
-      nextRound()
       let winner = checkRoundWinner(thisGameSuit, thisTurnCards)
       let winner_id = winner.player_id;
       toast.success(`${playerDetails[winner_id].name} won this round!`)
@@ -502,13 +501,13 @@ export default function Home() {
                         msg.player_id === playerId ? (
                           <div
                             className="max-w-2/3 w-fit py-1 px-4 m-1 flex flex-col ml-auto justify-end rounded text-white bg-gradient-to-r from-cyan-500 to-blue-500">
-                            <p className="text-xs italic">Akash{msg?.name}</p>
+                            <p className="text-xs italic">{msg?.name}</p>
                             <p>{msg.msg}</p>
                           </div>
                         ) : (
                           <div
                             className="max-w-2/3 w-fit py-1 px-4 m-1 rounded text-white bg-gradient-to-br from-pink-500 to-orange-400">
-                            <p className="text-xs italic">Akash{msg?.name}</p>
+                            <p className="text-xs italic">{msg?.name}</p>
                             <p>{msg.msg}</p>
                           </div>
                         )
