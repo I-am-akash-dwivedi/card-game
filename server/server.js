@@ -73,11 +73,8 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('submitGameSuitClient', gameSuit);
   })
 
-  socket.on('send-message', (roomId, message, playerId) => {
-    io.to(roomId).emit('messages', {
-      'player_id': playerId,
-      'msg': message
-    })
+  socket.on('send-message', (roomId, msg_payload) => {
+    io.to(roomId).emit('messages', msg_payload)
   })
 
   socket.on('disconnecting', () => {

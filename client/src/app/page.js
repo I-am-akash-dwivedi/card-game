@@ -20,7 +20,9 @@ import Card from "@/app/components/card";
 import PlayersInRoom from "@/app/components/players-in-room";
 import {sendMessage} from "next/dist/client/dev/error-overlay/websocket";
 
-const socket = io("http://localhost:4000");
+const socket_url = process.env.SOCKET_URL || 'http://card-game-server-lxj5.onrender.com';
+// const socket = io("http://localhost:4000");
+const socket = io(socket_url);
 
 export default function Home() {
   const [name, setName] = useState('');
@@ -46,7 +48,12 @@ export default function Home() {
   };
 
   const sendMessage = () => {
-    socket.emit('send-message', roomId, message, playerId)
+    const msg_payload = {
+      'player_id': playerId,
+      'msg': msg,
+      'name': name
+    }
+    socket.emit('send-message', roomId, msg_payload)
     setMessage('')
   }
 
@@ -494,10 +501,16 @@ export default function Home() {
                       {
                         msg.player_id === playerId ? (
                           <div
-                            className="w-2/3 p-2 m-1 flex ml-auto justify-end rounded text-white bg-gradient-to-r from-cyan-500 to-blue-500">{msg.msg}</div>
+                            className="max-w-2/3 w-fit py-1 px-4 m-1 flex flex-col ml-auto justify-end rounded text-white bg-gradient-to-r from-cyan-500 to-blue-500">
+                            <p className="text-xs italic">Akash{msg?.name}</p>
+                            <p>{msg.msg}</p>
+                          </div>
                         ) : (
                           <div
-                            className="w-2/3 p-2 m-1 rounded text-white bg-gradient-to-br from-pink-500 to-orange-400">{msg.msg}</div>
+                            className="max-w-2/3 w-fit py-1 px-4 m-1 rounded text-white bg-gradient-to-br from-pink-500 to-orange-400">
+                            <p className="text-xs italic">Akash{msg?.name}</p>
+                            <p>{msg.msg}</p>
+                          </div>
                         )
                       }
                     </div>
