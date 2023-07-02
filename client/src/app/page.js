@@ -112,7 +112,7 @@ export default function Home() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [players]);
 
   const saveStateToLocalStorage = (key, state) => {
     try {
@@ -296,7 +296,7 @@ export default function Home() {
         nextRound()
       }
     }
-  }, [thisTurnCards])
+  }, [nextRound, playerDetails, thisGameSuit, thisTurnCards])
 
   socket.on('handle_turn_client', (selected_card, current_player) => {
     const player_ids = Object.keys(playerDetails)
@@ -430,7 +430,7 @@ export default function Home() {
                   <div className="flex justify-center flex-wrap mx-4">
                     {
                       thisTurnCards.map((card, index) => (
-                        <div className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-2">
+                        <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-2">
                           <div className="bg-white rounded-lg shadow-lg">
                             <Card key={index} card={card} isActive={false}/>
                           </div>
@@ -467,7 +467,7 @@ export default function Home() {
           <div className="flex flex-wrap mx-4">
             {
               mineDetails?.cards.map((this_card, index) => (
-                <div className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-1">
+                <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-1">
                   <div className="bg-white rounded-lg shadow-lg">
                     <Card key={index} card={this_card} onCardClick={handleCardClick}
                           isActive={playerId === activePlayer && thisGameSuit}/>
