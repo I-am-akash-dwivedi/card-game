@@ -75,6 +75,11 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('messages', msg_payload)
   })
 
+  socket.on('start-next-round', (payload) => {
+    const room_id = payload.room_id;
+    io.to(room_id).emit('next-round-started', payload)
+  })
+
   socket.on('disconnecting', () => {
     const rooms = Object.keys(socket.rooms);
 

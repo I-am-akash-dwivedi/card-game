@@ -97,14 +97,14 @@ export function checkRoundWinner(suit, cards) {
   let this_suit = cards[0].suit;
   let has_color = false;
   for (const card of cards) {
-    let rank = cardValueOrder[card.rank] || parseInt(card.rank, 10);
-    card.rank = rank;
+    let value = cardValueOrder[card.rank] || parseInt(card.rank, 10);
+    card.value = value;
     if (card.suit === suit) {
       has_color = true;
       if (highestCard === null) {
         highestCard = card;
         winner = card;
-      } else if (rank > highestCard.rank || suit !== highestCard.suit) {
+      } else if (value > highestCard.value || suit !== highestCard.suit) {
         highestCard = card;
         winner = card;
       }
@@ -112,7 +112,7 @@ export function checkRoundWinner(suit, cards) {
       if (highestCard === null) {
         highestCard = card;
         winner = card;
-      } else if (rank > highestCard.rank) {
+      } else if (value > highestCard.value) {
         highestCard = card;
         winner = card;
       }

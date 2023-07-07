@@ -19,7 +19,7 @@ import {
 import Card from "@/app/components/card";
 import PlayersInRoom from "@/app/components/players-in-room";
 
-const socket_url = process.env.SOCKET_URL || 'https://card-game-server-lxj5.onrender.com';
+const socket_url = process.env.SOCKET_URL || 'http://localhost:4000';
 // const socket = io("http://localhost:4000");
 const socket = io(socket_url);
 
@@ -41,9 +41,12 @@ export default function Home() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [allowCardClick, setAllowCardClick] = useState(true);
+  const [msgSeenCount, setMsgSeenCount] = useState(0);
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
+    setMsgSeenCount(messages.length);
   };
 
   const sendMessage = () => {
@@ -54,12 +57,8 @@ export default function Home() {
     }
     socket.emit('send-message', roomId, msg_payload)
     setMessage('')
+    setMsgSeenCount(msgSeenCount + 1)
   }
-
-  socket.on('messages', (msg) => {
-    console.log(msg)
-    setMessages((prevMsgs) => [...prevMsgs, msg])
-  })
 
   const suits = {
     "♥": "Heart",
@@ -108,6 +107,17 @@ export default function Home() {
       }
     });
 
+    socket.on('messages', (msg) => {
+      setMessages((prevMsgs) => [...prevMsgs, msg])
+    })
+
+    socket.on('next-round-started', (res_payload) => {
+      const {player_details, active_player} = res_payload
+      toast.success("This round is over. Starting next round...")
+      setThisGameSuit('')
+      setPlayerDetails(player_details)
+      setActivePlayer(active_player)
+    })
 
     return () => {
       socket.disconnect();
@@ -252,31 +262,34 @@ export default function Home() {
     socket.emit("send-player-details", playerDetails, roomId)
   };
 
-  const nextRound = () => {
-    toast.success("This round is over. Starting next round...")
-    const numberOfPlayers = Object.keys(playerDetails).length;
-    const hands_to_make = handsToMake(numberOfPlayers);
-    Object.entries(playerDetails).forEach(([player_id, thisPlayerDetail]) => {
-      thisPlayerDetail.card_used = []
-      thisPlayerDetail.cards = []
-      thisPlayerDetail.backlog += thisPlayerDetail.made - thisPlayerDetail.to_make;
-      thisPlayerDetail.made = 0
-      const toMakeIndex = hands_to_make.indexOf(thisPlayerDetail.to_make);
-      let to_make_for_this_round = hands_to_make[(toMakeIndex + 1) % hands_to_make.length]
-      thisPlayerDetail.to_make = to_make_for_this_round
-      if (to_make_for_this_round === Math.max(...hands_to_make)) {
-        setActivePlayer(player_id)
-      }
-      console.log(thisPlayerDetail)
-    })
-    const shuffledDeck = shuffleDeck(deckOfCards());
-    distributeCards(shuffledDeck, playerDetails)
-    setThisGameSuit('')
-    setPlayerDetails(playerDetails)
-    console.log(playerDetails)
-  }
-
   useEffect(() => {
+    const nextRound = () => {
+      const numberOfPlayers = Object.keys(playerDetails).length;
+      const hands_to_make = handsToMake(numberOfPlayers);
+      let this_round_active_player = null;
+      Object.entries(playerDetails).forEach(([player_id, thisPlayerDetail]) => {
+        thisPlayerDetail.card_used = []
+        thisPlayerDetail.cards = []
+        thisPlayerDetail.backlog += thisPlayerDetail.made - thisPlayerDetail.to_make;
+        thisPlayerDetail.made = 0
+        const toMakeIndex = hands_to_make.indexOf(thisPlayerDetail.to_make);
+        let to_make_for_this_round = hands_to_make[(toMakeIndex + 1) % hands_to_make.length]
+        thisPlayerDetail.to_make = to_make_for_this_round
+        if (to_make_for_this_round === Math.max(...hands_to_make)) {
+          this_round_active_player = player_id;
+        }
+      })
+
+      const shuffledDeck = shuffleDeck(deckOfCards());
+      distributeCards(shuffledDeck, playerDetails)
+      let next_round_payload = {
+        "room_id": roomId,
+        "player_details": playerDetails,
+        "active_player": this_round_active_player,
+      }
+      socket.emit('start-next-round', (next_round_payload))
+    }
+
     const player_ids = Object.keys(playerDetails)
     for (const thisTurnCard of thisTurnCards) {
       let player_id = thisTurnCard.player_id
@@ -284,26 +297,30 @@ export default function Home() {
       playerDetails[player_id].card_used.push(thisTurnCard)
     }
     if (thisTurnCards.length === player_ids.length && thisTurnCards.length !== 0) {
+      setAllowCardClick(false)
       let winner = checkRoundWinner(thisGameSuit, thisTurnCards)
       let winner_id = winner.player_id;
       toast.success(`${playerDetails[winner_id].name} won this round!`)
       playerDetails[winner_id].made += 1
       setPlayerDetails(playerDetails)
-      setThisTurnCards([])
-      setActivePlayer(winner_id)
-      if (playerDetails[winner_id].cards.length === 0) {
-        nextRound()
-      }
+      setTimeout(() => {
+        setThisTurnCards([])
+        setActivePlayer(winner_id)
+        if (playerDetails[winner_id].cards.length === 0) {
+          nextRound()
+        }
+        setAllowCardClick(true)
+      }, 1500)
     }
-  }, [nextRound, playerDetails, thisGameSuit, thisTurnCards])
+  }, [playerDetails, playerId, roomId, thisGameSuit, thisTurnCards])
 
   socket.on('handle_turn_client', (selected_card, current_player) => {
     const player_ids = Object.keys(playerDetails)
     const current_player_index = player_ids.indexOf(activePlayer)
     const next_player_index = (current_player_index + 1) % player_ids.length
     const next_player_id = player_ids[next_player_index]
-    setActivePlayer(next_player_id)
     setThisTurnCards([...thisTurnCards, selected_card])
+    setActivePlayer(next_player_id)
   })
 
   const handleCardClick = (selectedCard) => {
@@ -469,7 +486,7 @@ export default function Home() {
                 <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-1">
                   <div className="bg-white rounded-lg shadow-lg">
                     <Card key={index} card={this_card} onCardClick={handleCardClick}
-                          isActive={playerId === activePlayer && thisGameSuit}/>
+                          isActive={playerId === activePlayer && thisGameSuit && allowCardClick}/>
                   </div>
                 </div>
               ))
@@ -480,11 +497,17 @@ export default function Home() {
 
       {isGameStarted && (
         <div style={{'position': 'fixed'}} className="bottom-0 right-0 p-2 flex flex-col-reverse items-end w-full">
-          <button
-            className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg"
-            onClick={toggleChat}
-          >
-            {isChatOpen ? "Close" : "Open Chat"}
+          <button onClick={toggleChat}>
+            {isChatOpen ? (
+              <div className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">
+                Close
+              </div>
+            ) : (
+              <div className="relative">
+                <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">{messages.length - msgSeenCount}</span>
+                <div className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">Open Chat</div>
+              </div>
+            )}
           </button>
 
           {isChatOpen && (
