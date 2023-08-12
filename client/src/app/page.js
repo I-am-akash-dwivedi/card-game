@@ -325,11 +325,23 @@ export default function Home() {
 
   const handleCardClick = (selectedCard) => {
     if (playerId === activePlayer) {
-      mineDetails.cards = mineDetails.cards.filter((card) => card.rank !== selectedCard.rank || card.suit !== selectedCard.suit)
-      mineDetails.card_used.push(selectedCard)
-      socket.emit('handle_turn', selectedCard, activePlayer, roomId)
+      if (!isValidCard(selectedCard)) {
+        toast.error("Aise cheating nahi karne dunga.")
+      } else {
+        mineDetails.cards = mineDetails.cards.filter((card) => card.rank !== selectedCard.rank || card.suit !== selectedCard.suit)
+        mineDetails.card_used.push(selectedCard)
+        socket.emit('handle_turn', selectedCard, activePlayer, roomId)
+      }
     }
   };
+
+  const isValidCard = (card_to_check) => {
+    if (thisTurnCards.length === 0){
+      return true;
+    } else {
+      return thisTurnCards[0].suit === card_to_check.suit || thisGameSuit === card_to_check.suit
+    }
+  }
 
   socket.on('submitGameSuitClient', (suit) => {
     setThisGameSuit(suit)
@@ -363,8 +375,18 @@ export default function Home() {
           </button>
         </form>
       ) : (
-        <Greeting name={name}/>
+        !isGameStarted && (
+          <Greeting name={name}/>
+        )
       )}
+
+      {
+        thisGameSuit && (
+          <div className="flex justify-center">
+            <span className='fixed top-2 text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm animate-pulse cursor-pointer'>{playerDetails[activePlayer].name}&apos;s Turn</span>
+          </div>
+        )
+      }
 
       {!isGameStarted && isRoomCreated && !isRoomJoined ? (
         <RoomCreated roomId={roomId} players={players} onClick={startGame}/>
@@ -401,10 +423,6 @@ export default function Home() {
       {isGameStarted && (
         <>
           <div className="text-center">
-            {thisGameSuit && (
-              <span
-                className='text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center mr-2 mb-2 text-sm animate-pulse cursor-pointer'>{playerDetails[activePlayer].name}&apos;s Turn</span>
-            )}
             {playerDetails && (
               <div className='flex flex-col md:flex-row justify-evenly items-center relative m-8'>
                 <table className="text-sm text-left text-gray-500 dark:text-gray-400">
@@ -486,7 +504,7 @@ export default function Home() {
                 <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-1">
                   <div className="bg-white rounded-lg shadow-lg">
                     <Card key={index} card={this_card} onCardClick={handleCardClick}
-                          isActive={playerId === activePlayer && thisGameSuit && allowCardClick}/>
+                          isActive={playerId === activePlayer && thisGameSuit && allowCardClick && (isValidCard(this_card)) }/>
                   </div>
                 </div>
               ))
@@ -496,7 +514,7 @@ export default function Home() {
       )}
 
       {isGameStarted && (
-        <div style={{'position': 'fixed'}} className="bottom-0 right-0 p-2 flex flex-col-reverse items-end w-full">
+        <div style={{'position': 'fixed'}} className="bottom-0 right-0 p-4 flex flex-col-reverse items-end w-full">
           <button onClick={toggleChat}>
             {isChatOpen ? (
               <div className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">
