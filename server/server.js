@@ -29,6 +29,7 @@ io.on('connection', (socket) => {
 
   socket.on('setName', (name) => {
     socket.name = name;
+    console.log(name)
   });
 
   socket.on('createRoom', (hostName) => {

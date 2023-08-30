@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../../../JobStep/pdf2doc/HTML to DOCX/.idea/HTML to DOCX.iml" filepath="$PROJECT_DIR$/../../../JobStep/pdf2doc/HTML to DOCX/.idea/HTML to DOCX.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/card-game.iml" filepath="$PROJECT_DIR$/.idea/card-game.iml" />
     </modules>
   </component>
