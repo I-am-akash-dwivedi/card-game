@@ -241,7 +241,6 @@ export default function Home() {
       return;
     }
     const hands_to_make = handsToMake(numberOfPlayers);
-    toast.info('Starting game...');
     // TODO: we can remove this if condition once the game is ready.
     if (Object.keys(playerDetails).length === 0) {
       for (const [index, player] of players.entries()) {
@@ -326,7 +325,7 @@ export default function Home() {
   const handleCardClick = (selectedCard) => {
     if (playerId === activePlayer) {
       if (!isValidCard(selectedCard)) {
-        toast.error("Aise cheating nahi karne dunga.")
+        toast.error("Aise cheating nahi kar sakte.")
       } else {
         mineDetails.cards = mineDetails.cards.filter((card) => card.rank !== selectedCard.rank || card.suit !== selectedCard.suit)
         mineDetails.card_used.push(selectedCard)
@@ -334,9 +333,21 @@ export default function Home() {
       }
     }
   };
+  
+  const thisTurnCardAvailable = () => {
+    if (thisTurnCards.length === 0) return true;
+    mineDetails.cards.forEach((card) => {
+      if (card.suit === thisTurnCards[0].suit || thisGameSuit === card.suit) {
+        return true;
+      }
+    })
+    return false;
+  }
 
   const isValidCard = (card_to_check) => {
-    if (thisTurnCards.length === 0){
+    let this_turn_card_available = thisTurnCardAvailable();
+    
+    if (thisTurnCards.length === 0 || !this_turn_card_available){
       return true;
     } else {
       return thisTurnCards[0].suit === card_to_check.suit || thisGameSuit === card_to_check.suit
@@ -358,7 +369,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto py-8 bg-purple-300 min-h-screen">
+    <div className="bg-blue-100 min-h-screen py-8 px-4">
       {/*<button type="button" className="sticky top-0 left-8 bg-red-600 text-white px-2 py-1 rounded" onClick={clearData}>Clear stored data</button>*/}
       {!nameSubmitted ? (
         <form onSubmit={handleNameSubmit} id="set-name" className="flex items-center justify-center">
@@ -383,7 +394,7 @@ export default function Home() {
       {
         thisGameSuit && (
           <div className="flex justify-center">
-            <span className='fixed top-2 text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm animate-pulse cursor-pointer'>{playerDetails[activePlayer].name}&apos;s Turn</span>
+            <span className='fixed top-2 text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm animate-pulse cursor-pointer z-50'>{playerDetails[activePlayer].name}&apos;s Turn</span>
           </div>
         )
       }
@@ -397,9 +408,9 @@ export default function Home() {
       ) : null}
 
       {nameSubmitted && !isRoomCreated && !isRoomJoined ? (
-        <div className="flex items-center justify-center mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 w-full sm:w-1/2 mx-auto mt-4">
           <button onClick={handleCreateRoom}
-                  className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white px-4 py-2 rounded mr-2">
+                  className="bg-gradient-to-r from-green-400 via-green-500 to-green-600 text-white px-4 py-2 rounded m-1">
             Create Room
           </button>
           <input
@@ -407,10 +418,10 @@ export default function Home() {
             value={roomId}
             onChange={(e) => setRoomId(e.target.value)}
             placeholder="Enter Room ID"
-            className="border border-gray-300 px-4 py-2 rounded mr-2"
+            className="border border-gray-300 px-4 py-2 rounded m-1"
           />
           <button onClick={handleJoinRoom}
-                  className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded">
+                  className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded m-1">
             Join Room
           </button>
         </div>
@@ -461,10 +472,10 @@ export default function Home() {
             <div className='game-area'>
               {
                 thisTurnCards.length > 0 && (
-                  <div className="flex justify-center flex-wrap mx-4">
+                  <div className="flex justify-center flex-wrap gap-4 mx-4">
                     {
                       thisTurnCards.map((card, index) => (
-                        <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-2">
+                        <div key={index} className="w-1/4 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12">
                           <div className="bg-white rounded-lg shadow-lg">
                             <Card key={index} card={card} isActive={false}/>
                           </div>
@@ -498,10 +509,10 @@ export default function Home() {
 
       {isGameStarted && Object.keys(mineDetails).length > 0 && (
         <>
-          <div className="flex flex-wrap mx-4">
+          <div className="flex flex-wrap justify-center gap-4 mx-4">
             {
               mineDetails?.cards.map((this_card, index) => (
-                <div key={index} className="w-1/6 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12 m-1">
+                <div key={index} className="w-1/4 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12">
                   <div className="bg-white rounded-lg shadow-lg">
                     <Card key={index} card={this_card} onCardClick={handleCardClick}
                           isActive={playerId === activePlayer && thisGameSuit && allowCardClick && (isValidCard(this_card)) }/>
