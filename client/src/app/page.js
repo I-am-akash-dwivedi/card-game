@@ -18,6 +18,7 @@ import {
 } from "@/app/utils/utils";
 import Card from "@/app/components/card";
 import PlayersInRoom from "@/app/components/players-in-room";
+import Link from "next/link";
 
 const socket_url = process.env.SOCKET_URL || 'https://card-game-server-lxj5.onrender.com';
 // const socket = io("http://localhost:4000");
@@ -43,12 +44,12 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [allowCardClick, setAllowCardClick] = useState(true);
   const [msgSeenCount, setMsgSeenCount] = useState(0);
-
+  
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
     setMsgSeenCount(messages.length);
   };
-
+  
   const sendMessage = () => {
     const msg_payload = {
       'player_id': playerId,
@@ -59,14 +60,14 @@ export default function Home() {
     setMessage('')
     setMsgSeenCount(msgSeenCount + 1)
   }
-
+  
   const suits = {
     "♥": "Heart",
     "♦": "Diamond",
     "♣": "Club",
     "♠": "Spade"
   }
-
+  
   useEffect(() => {
     socket.on('roomCreated', (roomId, hostName) => {
       setIsRoomCreated(true);
@@ -74,43 +75,43 @@ export default function Home() {
       // let updatedPlayers = [...players, hostName]
       // setPlayers(updatedPlayers)
       setPlayers((prevPlayers) => [...prevPlayers, hostName])
-      toast.success('Room created!');
+      toast.success('Room created successfully!');
     });
-
+    
     socket.on('roomJoined', (roomId) => {
       setIsRoomJoined(true);
       setRoomId(roomId);
-      toast.success('Room joined!');
+      toast.success('Room joined successfully!');
     });
-
+    
     socket.on('unknownRoom', () => {
       toast.error('Unknown room. Please check the room ID.');
     });
-
+    
     socket.on('roomFull', () => {
       toast.error('The room is full. Please join another room.');
     });
-
+    
     socket.on('playerJoined', (playerName) => {
       setPlayers((prevPlayers) => [...prevPlayers, playerName]);
       toast.info(`${playerName} has joined the room.`);
     });
-
+    
     socket.on('playerLeft', (playerName) => {
       setPlayers((prevPlayers) => prevPlayers.filter((player) => player !== playerName));
       toast.info(`${playerName} has left the room.`);
     });
-
+    
     socket.on('playersInRoom', (players) => {
       if (players && players.length > 0) {
         setPlayers(players);
       }
     });
-
+    
     socket.on('messages', (msg) => {
       setMessages((prevMsgs) => [...prevMsgs, msg])
     })
-
+    
     socket.on('next-round-started', (res_payload) => {
       const {player_details, active_player} = res_payload
       toast.success("This round is over. Starting next round...")
@@ -118,12 +119,12 @@ export default function Home() {
       setPlayerDetails(player_details)
       setActivePlayer(active_player)
     })
-
+    
     return () => {
       socket.disconnect();
     };
   }, []);
-
+  
   const saveStateToLocalStorage = (key, state) => {
     try {
       localStorage.setItem(key, JSON.stringify(state));
@@ -132,7 +133,7 @@ export default function Home() {
       toast.error(`Error saving state '${key}' to Local Storage:`, error);
     }
   };
-
+  
   const loadStateFromLocalStorage = (key, defaultValue) => {
     try {
       const storedState = localStorage.getItem(key);
@@ -144,8 +145,8 @@ export default function Home() {
     }
     return defaultValue;
   };
-
-
+  
+  
   // useEffect(() => {
   //   name && saveStateToLocalStorage('name', name);
   //   playerId && saveStateToLocalStorage('playerId', playerId);
@@ -164,7 +165,7 @@ export default function Home() {
   //
   //   console.log(localStorage)
   // }, [name, playerId, nameSubmitted, roomId, isRoomCreated, isRoomJoined, players, playerDetails, mineDetails, isGameStarted, deck, activePlayer, thisTurnCards, thisGameSuit]);
-
+  
   // useEffect(() => {
   //   setName(loadStateFromLocalStorage('name', ''));
   //   setPlayerId(loadStateFromLocalStorage('playerId', ''));
@@ -181,7 +182,7 @@ export default function Home() {
   //   setThisTurnCards(loadStateFromLocalStorage('thisTurnCards', []));
   //   setThisGameSuit(loadStateFromLocalStorage('thisGameSuit', ''));
   // }, [])
-
+  
   const handleNameSubmit = (e) => {
     e.preventDefault();
     if (name.trim() === "") {
@@ -189,16 +190,16 @@ export default function Home() {
       return;
     }
     socket.emit('setName', name);
-    toast.success('Name set!');
+    toast.success(`Thanks ${name}! You can now create or join a room.`);
     setNameSubmitted(true);
   };
-
+  
   const handleCreateRoom = () => {
     socket.emit('createRoom', name);
     // setPlayers((prevPlayers) => [...prevPlayers, name]);
     // setPlayers([name])
   };
-
+  
   const handleJoinRoom = () => {
     if (!roomId) {
       toast.error('Please enter a room ID.');
@@ -206,18 +207,18 @@ export default function Home() {
     }
     socket.emit('joinRoom', roomId);
   };
-
+  
   useEffect(() => {
     const temp_deck = deckOfCards()
     setDeck(temp_deck);
   }, []);
-
+  
   useEffect(() => {
     if (playerId) {
       setMineDetails(playerDetails[playerId])
     }
   }, [playerDetails, playerId])
-
+  
   socket.on("all-player-details", (all_player_details) => {
     setPlayerDetails(all_player_details)
     let this_player_id = null;
@@ -230,7 +231,7 @@ export default function Home() {
     setIsGameStarted(true);
     setActivePlayer(Object.keys(all_player_details)[0])
   })
-
+  
   const startGame = () => {
     const numberOfPlayers = players.length;
     if (numberOfPlayers < 2) {
@@ -260,7 +261,7 @@ export default function Home() {
     distributeCards(shuffledDeck, playerDetails)
     socket.emit("send-player-details", playerDetails, roomId)
   };
-
+  
   useEffect(() => {
     const nextRound = () => {
       const numberOfPlayers = Object.keys(playerDetails).length;
@@ -278,7 +279,7 @@ export default function Home() {
           this_round_active_player = player_id;
         }
       })
-
+      
       const shuffledDeck = shuffleDeck(deckOfCards());
       distributeCards(shuffledDeck, playerDetails)
       let next_round_payload = {
@@ -288,7 +289,7 @@ export default function Home() {
       }
       socket.emit('start-next-round', (next_round_payload))
     }
-
+    
     const player_ids = Object.keys(playerDetails)
     for (const thisTurnCard of thisTurnCards) {
       let player_id = thisTurnCard.player_id
@@ -312,7 +313,7 @@ export default function Home() {
       }, 1500)
     }
   }, [playerDetails, playerId, roomId, thisGameSuit, thisTurnCards])
-
+  
   socket.on('handle_turn_client', (selected_card, current_player) => {
     const player_ids = Object.keys(playerDetails)
     const current_player_index = player_ids.indexOf(activePlayer)
@@ -321,7 +322,7 @@ export default function Home() {
     setThisTurnCards([...thisTurnCards, selected_card])
     setActivePlayer(next_player_id)
   })
-
+  
   const handleCardClick = (selectedCard) => {
     if (playerId === activePlayer) {
       if (!isValidCard(selectedCard)) {
@@ -343,70 +344,76 @@ export default function Home() {
     })
     return false;
   }
-
+  
   const isValidCard = (card_to_check) => {
     let this_turn_card_available = thisTurnCardAvailable();
     
-    if (thisTurnCards.length === 0 || !this_turn_card_available){
+    if (thisTurnCards.length === 0 || !this_turn_card_available) {
       return true;
     } else {
       return thisTurnCards[0].suit === card_to_check.suit || thisGameSuit === card_to_check.suit
     }
   }
-
+  
   socket.on('submitGameSuitClient', (suit) => {
     setThisGameSuit(suit)
   })
-
+  
   const submitGameSuit = (suit) => {
     socket.emit('submitGameSuit', suit, roomId)
   }
-
+  
   const clearData = () => {
     localStorage.clear();
     toast.success("Cleared stored data")
     window.location.reload();
   }
-
+  
   return (
     <div className="bg-blue-100 min-h-screen py-8 px-4">
       {/*<button type="button" className="sticky top-0 left-8 bg-red-600 text-white px-2 py-1 rounded" onClick={clearData}>Clear stored data</button>*/}
       {!nameSubmitted ? (
-        <form onSubmit={handleNameSubmit} id="set-name" className="flex items-center justify-center">
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-            className="border border-gray-300 px-4 py-2 rounded mr-2"
-          />
-          <button type="submit"
-                  className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded">
-            Set Name
-          </button>
-        </form>
+        <>
+          <div className="w-screen text-center mb-8">
+            <Link href={"/how-to-play"} className="bg-black text-white px-3 py-2 rounded-md">How to play</Link>
+          </div>
+          <form onSubmit={handleNameSubmit} id="set-name" className="flex items-center justify-center">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              className="border border-gray-300 px-4 py-2 rounded mr-2"
+            />
+            <button type="submit"
+                    className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded">
+              Set Name
+            </button>
+          </form>
+        </>
       ) : (
         !isGameStarted && (
           <Greeting name={name}/>
         )
       )}
-
+      
       {
         thisGameSuit && (
           <div className="flex justify-center">
-            <span className='fixed top-2 text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm animate-pulse cursor-pointer z-50'>{playerDetails[activePlayer].name}&apos;s Turn</span>
+            <span
+              className='fixed top-2 text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm animate-pulse cursor-pointer z-50'>{playerDetails[activePlayer].name}&apos;s Turn</span>
           </div>
         )
       }
-
+      
       {!isGameStarted && isRoomCreated && !isRoomJoined ? (
         <RoomCreated roomId={roomId} players={players} onClick={startGame}/>
       ) : null}
-
+      
       {!isGameStarted && isRoomJoined ? (
         <RoomJoined roomId={roomId} players={players}/>
       ) : null}
-
+      
       {nameSubmitted && !isRoomCreated && !isRoomJoined ? (
         <div className="grid grid-cols-1 sm:grid-cols-3 w-full sm:w-1/2 mx-auto mt-4">
           <button onClick={handleCreateRoom}
@@ -426,11 +433,11 @@ export default function Home() {
           </button>
         </div>
       ) : null}
-
+      
       {players.length > 0 && (
         <PlayersInRoom players={players}/>
       )}
-
+      
       {isGameStarted && (
         <>
           <div className="text-center">
@@ -459,14 +466,14 @@ export default function Home() {
                   }
                   </tbody>
                 </table>
-
+                
                 {thisGameSuit && (
                   <div className='flex flex-col text-2xl justify-center items-center max-h-full m-2'>
                     This game suit is:
                     <span className="text-3xl">{suits[thisGameSuit]} ({thisGameSuit})</span>
                   </div>
                 )}
-
+              
               </div>
             )}
             <div className='game-area'>
@@ -489,7 +496,7 @@ export default function Home() {
           </div>
         </>
       )}
-
+      
       {(!thisGameSuit && activePlayer === playerId && activePlayer !== '') ? (
         <div className="flex items-center justify-center m-4">
           {Object.keys(suits).map((suit) => (
@@ -506,7 +513,7 @@ export default function Home() {
           </div>
         )
       )}
-
+      
       {isGameStarted && Object.keys(mineDetails).length > 0 && (
         <>
           <div className="flex flex-wrap justify-center gap-4 mx-4">
@@ -515,7 +522,7 @@ export default function Home() {
                 <div key={index} className="w-1/4 sm:w-1/6 md:w-1/12 lg:w-1/12 xl:w-1/12">
                   <div className="bg-white rounded-lg shadow-lg">
                     <Card key={index} card={this_card} onCardClick={handleCardClick}
-                          isActive={playerId === activePlayer && thisGameSuit && allowCardClick && (isValidCard(this_card)) }/>
+                          isActive={playerId === activePlayer && thisGameSuit && allowCardClick && (isValidCard(this_card))}/>
                   </div>
                 </div>
               ))
@@ -523,22 +530,27 @@ export default function Home() {
           </div>
         </>
       )}
-
+      
       {isGameStarted && (
         <div style={{'position': 'fixed'}} className="bottom-0 right-0 p-4 flex flex-col-reverse items-end w-full">
           <button onClick={toggleChat}>
             {isChatOpen ? (
-              <div className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">
+              <div
+                className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">
                 Close
               </div>
             ) : (
               <div className="relative">
-                <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">{messages.length - msgSeenCount}</span>
-                <div className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">Open Chat</div>
+                <span
+                  className="bg-red-500 text-white px-2 py-1 rounded-full text-xs absolute top-0 right-0 transform translate-x-1/2 -translate-y-1/2">{messages.length - msgSeenCount}</span>
+                <div
+                  className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 font-semibold py-2 px-4 rounded-lg">Open
+                  Chat
+                </div>
               </div>
             )}
           </button>
-
+          
           {isChatOpen && (
             <div className="bg-white shadow-lg rounded-lg p-4 my-4 w-full sm:w-1/2 flex flex-col content-between">
               <div className="text-xl text-center">
@@ -587,7 +599,7 @@ export default function Home() {
           )}
         </div>
       )}
-
+      
       <ToastContainer/>
     </div>
   );
