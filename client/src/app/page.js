@@ -46,6 +46,20 @@ export default function Home() {
   const [allowCardClick, setAllowCardClick] = useState(true);
   const [msgSeenCount, setMsgSeenCount] = useState(0);
 
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      const message = "Are you sure you want to leave? Your data may be lost.";
+      event.returnValue = message;
+      return message;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
     setMsgSeenCount(messages.length);
@@ -112,7 +126,9 @@ export default function Home() {
     });
 
     socket.on("messages", (msg) => {
-      setMessages((prevMsgs) => [...prevMsgs, msg]);
+      // setMessages((prevMsgs) => [...prevMsgs, msg]);
+      toast.dark(`${msg.name}: ${msg.msg}`);
+      setMessages((prevMsgs) => [msg, ...prevMsgs]);
     });
 
     socket.on("next-round-started", (res_payload) => {
