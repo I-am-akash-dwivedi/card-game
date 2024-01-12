@@ -46,6 +46,24 @@ export default function Home() {
   const [allowCardClick, setAllowCardClick] = useState(true);
   const [msgSeenCount, setMsgSeenCount] = useState(0);
 
+  const reactions = [
+    "😄",
+    "😍",
+    "😘",
+    "😊",
+    "😎",
+    "😏",
+    "😢",
+    "😭",
+    "😡",
+    "🥳",
+    "🤣",
+    "😱",
+    "🤗",
+    "🤩",
+    "🥰",
+  ];
+
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       const message = "Are you sure you want to leave? Your data may be lost.";
@@ -65,10 +83,10 @@ export default function Home() {
     setMsgSeenCount(messages.length);
   };
 
-  const sendMessage = () => {
+  const sendMessage = (msg = null) => {
     const msg_payload = {
       player_id: playerId,
-      msg: message,
+      msg: msg || message,
       name: name,
     };
     socket.emit("send-message", roomId, msg_payload);
@@ -367,12 +385,14 @@ export default function Home() {
 
   const thisTurnCardAvailable = () => {
     if (thisTurnCards.length === 0) return true;
+    let found = false;
     mineDetails.cards.forEach((card) => {
-      if (card.suit === thisTurnCards[0].suit || thisGameSuit === card.suit) {
-        return true;
+      if (card.suit === thisTurnCards[0].suit) {
+        found = true;
+        return;
       }
     });
-    return false;
+    return found;
   };
 
   const isValidCard = (card_to_check) => {
@@ -381,10 +401,10 @@ export default function Home() {
     if (thisTurnCards.length === 0 || !this_turn_card_available) {
       return true;
     } else {
-      return (
-        thisTurnCards[0].suit === card_to_check.suit ||
-        thisGameSuit === card_to_check.suit
-      );
+      if (this_turn_card_available) {
+        return thisTurnCards[0].suit === card_to_check.suit;
+      }
+      return thisGameSuit === card_to_check.suit;
     }
   };
 
@@ -640,7 +660,21 @@ export default function Home() {
               </div>
               <div>
                 <hr className="my-2" />
-                <div className="flex ">
+                <>
+                  {reactions.map((reaction, index) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        sendMessage(reaction);
+                      }}
+                      className="text-white rounded-md text-center text-2xl cursor-pointer ml-2 mr-2"
+                    >
+                      {reaction}
+                    </button>
+                  ))}
+                </>
+                <div className="flex mt-4">
+                  <></>
                   <textarea
                     rows="1"
                     value={message}
