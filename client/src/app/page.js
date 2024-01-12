@@ -48,20 +48,19 @@ export default function Home() {
 
   const reactions = [
     "😄",
-    "😍",
-    "😘",
+    "😅",
     "😊",
     "😎",
     "😏",
     "😢",
     "😭",
+    "🥲",
     "😡",
     "🥳",
     "🤣",
     "😱",
-    "🤗",
+    "😵‍💫",
     "🤩",
-    "🥰",
   ];
 
   useEffect(() => {
@@ -684,7 +683,7 @@ export default function Home() {
                   ></textarea>
                   <button
                     type="button"
-                    onClick={sendMessage}
+                    onClick={() => sendMessage()}
                     className="text-white bg-gradient-to-r from-purple-500 to-pink-500 focus:outline-none font-medium rounded-lg px-5 py-2.5 text-center text-sm cursor-pointer'"
                   >
                     Send
