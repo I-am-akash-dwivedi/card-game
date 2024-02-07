@@ -422,7 +422,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-blue-100 min-h-screen min-w-screen m-0 p-0">
+    <div className="bg-blue-100 min-h-screen min-w-screen m-0 p-4">
       {/*<button type="button" className="sticky top-0 left-8 bg-red-600 text-white px-2 py-1 rounded" onClick={clearData}>Clear stored data</button>*/}
       {!nameSubmitted ? (
         <>
@@ -437,7 +437,7 @@ export default function Home() {
           <form
             onSubmit={handleNameSubmit}
             id="set-name"
-            className="flex items-center justify-center"
+            className="flex items-center justify-center px-4"
           >
             <input
               type="text"
