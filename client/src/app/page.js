@@ -49,18 +49,18 @@ export default function Home() {
   const reactions = [
     "😄",
     "😅",
-    "😊",
-    "😎",
-    "😏",
-    "😢",
-    "😭",
-    "🥲",
-    "😡",
-    "🥳",
+    "😂",
     "🤣",
+    "😊",
+    "🥳",
+    "🥲",
+    "🫣",
+    "😉",
+    "😭",
     "😱",
-    "😵‍💫",
-    "🤩",
+    "👏🏻",
+    "👀",
+    "👻",
   ];
 
   useEffect(() => {
@@ -422,7 +422,7 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-blue-100 min-h-screen py-8 px-4">
+    <div className="bg-blue-100 min-h-screen min-w-screen p-4">
       {/*<button type="button" className="sticky top-0 left-8 bg-red-600 text-white px-2 py-1 rounded" onClick={clearData}>Clear stored data</button>*/}
       {!nameSubmitted ? (
         <>
@@ -504,14 +504,14 @@ export default function Home() {
         <>
           <div className="text-center">
             {playerDetails && (
-              <div className="flex flex-col md:flex-row justify-evenly items-center relative m-8">
-                <table className="text-sm text-left text-gray-500 dark:text-gray-400">
+              <div className="flex flex-col md:flex-row justify-evenly items-center relative m-4">
+                <table className="text-sm text-left text-gray-500 dark:text-gray-400 lg:w-1/3 w-full">
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                      <th className="px-6 py-3">Name</th>
-                      <th className="px-6 py-3">Made</th>
-                      <th className="px-6 py-3">To Make</th>
-                      <th className="px-6 py-3">Backlogs</th>
+                      <th className="p-3">Name</th>
+                      <th className="p-3 text-center">Score</th>
+                      <th className="p-3 text-center">To Make</th>
+                      <th className="p-3 text-center">Backlogs</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -521,12 +521,18 @@ export default function Home() {
                           key={player_id}
                           className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
                         >
-                          <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                          <td className="px-3 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                             {player_detail.name}
                           </td>
-                          <td className="px-6 py-4">{player_detail.made}</td>
-                          <td className="px-6 py-4">{player_detail.to_make}</td>
-                          <td className="px-6 py-4">{player_detail.backlog}</td>
+                          <td className="p-2 text-center">
+                            {player_detail.made}
+                          </td>
+                          <td className="p-2 text-center">
+                            {player_detail.to_make}
+                          </td>
+                          <td className="p-2 text-center">
+                            {player_detail.backlog}
+                          </td>
                         </tr>
                       )
                     )}
@@ -564,16 +570,18 @@ export default function Home() {
       )}
 
       {!thisGameSuit && activePlayer === playerId && activePlayer !== "" ? (
-        <div className="flex items-center justify-center m-4">
-          {Object.keys(suits).map((suit) => (
-            <button
-              key={suits[suit]}
-              onClick={() => submitGameSuit(suit)}
-              className="bg-black text-white px-4 py-2 rounded mr-2"
-            >
-              {suit} {suits[suit]}
-            </button>
-          ))}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-2 gap-y-1 m-4 w-full lg:w-1/3">
+            {Object.keys(suits).map((suit) => (
+              <button
+                key={suits[suit]}
+                onClick={() => submitGameSuit(suit)}
+                className="bg-black text-white px-4 py-2 rounded mr-2"
+              >
+                {suit} {suits[suit]}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         isGameStarted &&
