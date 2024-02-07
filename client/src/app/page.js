@@ -422,11 +422,11 @@ export default function Home() {
   };
 
   return (
-    <div className="bg-blue-100 min-h-screen min-w-screen p-4">
+    <div className="bg-blue-100 min-h-screen min-w-screen m-0 p-0">
       {/*<button type="button" className="sticky top-0 left-8 bg-red-600 text-white px-2 py-1 rounded" onClick={clearData}>Clear stored data</button>*/}
       {!nameSubmitted ? (
         <>
-          <div className="w-screen text-center mb-8">
+          <div className="text-center p-8">
             <Link
               href={"/how-to-play"}
               className="bg-black text-white px-3 py-2 rounded-md"
@@ -448,7 +448,7 @@ export default function Home() {
             />
             <button
               type="submit"
-              className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded"
+              className="whitespace-nowrap text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-4 py-2 rounded"
             >
               Set Name
             </button>
