@@ -1,25 +1,33 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-
-    // Or if using `src` directory:
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,jsx}"],
   theme: {
     extend: {
-      animation: {
-        pulse: 'pulse 2s ease-out infinite',
-      },
-      keyframes: {
-        pulse: {
-          '0%, 100%': { fontSize: '16px' },
-          '50%': { fontSize: '18px', opacity: 1 },
+      colors: {
+        // Ganjifa lacquer palette — indigo ground, marigold and brass accents,
+        // warm chalk for card stock. Deliberately not casino green.
+        ink: {
+          DEFAULT: "#0E1A2B",
+          raised: "#16263D",
+          line: "#22374F",
         },
+        marigold: "#F2A93B",
+        madder: "#C8322F",
+        brass: "#C9A227",
+        chalk: {
+          DEFAULT: "#EDE6D8",
+          dim: "#A9A192",
+        },
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
+      },
+      boxShadow: {
+        card: "0 2px 6px rgba(0,0,0,.35), 0 12px 24px -12px rgba(0,0,0,.55)",
+        lifted: "0 8px 18px rgba(0,0,0,.4), 0 24px 48px -18px rgba(0,0,0,.6)",
       },
     },
   },
   plugins: [],
-}
+};
