@@ -2,6 +2,367 @@
 @tailwind components;
 @tailwind utilities;
 
-.w-1\/4 {
-    width: 21%;
+@layer base {
+  :root {
+    --ink: #0e1a2b;
+    --ink-raised: #16263d;
+    --marigold: #f2a93b;
+    --madder: #c8322f;
+    --brass: #c9a227;
+    --chalk: #ede6d8;
+
+    /* Timings shared with the server's TRICK_LINGER_MS budget. */
+    --beat: 220ms;
+    --sweep: 520ms;
+    --ease-settle: cubic-bezier(0.18, 0.9, 0.28, 1.2);
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  /* The playing surface: indigo ground with a woven-mat weave, not felt. */
+  body {
+    background-color: var(--ink);
+    background-image:
+      radial-gradient(120% 80% at 50% 0%, rgba(242, 169, 59, 0.07), transparent 60%),
+      repeating-linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.014) 0 2px,
+        transparent 2px 4px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(0, 0, 0, 0.16) 0 2px,
+        transparent 2px 4px
+      );
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--marigold);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--marigold);
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  /* ------------------------------------------------------------------ cards */
+
+  .card-face {
+    position: relative;
+    aspect-ratio: 5 / 7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #fdfaf3 0%, var(--chalk) 62%, #ded5c3 100%);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.35),
+      0 12px 24px -12px rgba(0, 0, 0, 0.55);
+    user-select: none;
+  }
+
+  /* Inset hairline, the way real card stock is trimmed. */
+  .card-face::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 6px;
+    border: 1px solid rgba(14, 26, 43, 0.13);
+    pointer-events: none;
+  }
+
+  .card-red {
+    color: var(--madder);
+  }
+  .card-black {
+    color: #182233;
+  }
+
+  .card-corner {
+    position: absolute;
+    top: 5%;
+    left: 7%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 0.92;
+    font-size: clamp(0.62rem, 1.5vw, 0.85rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .card-corner-flipped {
+    top: auto;
+    left: auto;
+    right: 7%;
+    bottom: 5%;
+    transform: rotate(180deg);
+  }
+
+  .card-pip {
+    font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+    line-height: 1;
+    opacity: 0.92;
+  }
+
+  /* Card back: brass lattice on indigo. */
+  .card-back {
+    aspect-ratio: 5 / 7;
+    border-radius: 10px;
+    background-color: #14243a;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        rgba(201, 162, 39, 0.28) 0 1px,
+        transparent 1px 7px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(201, 162, 39, 0.28) 0 1px,
+        transparent 1px 7px
+      );
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  }
+
+  /* ------------------------------------------------------------------- hand */
+
+  /* A 15-card hand has to fit a 360px phone, so card width and overlap are
+     tuned together per breakpoint rather than left to flex. */
+  /* Width and overlap are tuned per breakpoint against the worst case — a
+     15-card two-player hand — so the fan never pushes the page sideways.
+     Widest hand ≈ 323px / 560px / 894px against 358px / 608px / 992px. */
+  .hand {
+    --card-w: 2.9rem;
+    --overlap: 1.66rem;
+    display: flex;
+    justify-content: center;
+    /* Room for the lift the fan applies to its middle cards. */
+    padding-top: 1.5rem;
+    padding-bottom: 0.5rem;
+    /* Belt and braces: a hand can never scroll the document. */
+    max-width: 100%;
+    overflow-x: clip;
+  }
+  .hand > * {
+    flex: 0 0 var(--card-w);
+    width: var(--card-w);
+  }
+  .hand > * + * {
+    margin-left: calc(-1 * var(--overlap));
+  }
+
+  @media (min-width: 640px) {
+    .hand {
+      --card-w: 3.5rem;
+      --overlap: 1.25rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hand {
+      --card-w: 4.75rem;
+      --overlap: 1.1rem;
+    }
+  }
+
+  /* Fan the hand: rotation and lift are derived from position in the hand,
+     so the arc stays correct at any card count. */
+  .hand-card {
+    --spread: 2.4deg;
+    --offset: calc(var(--i) - (var(--n) - 1) / 2);
+    /* max(x, -x) is abs(x) — the real abs() is too new to rely on. Subtracting
+       the half-width lifts the middle of the fan instead of dropping its edges,
+       so the hand never grows past its own bottom edge. */
+    transform: rotate(calc(var(--offset) * var(--spread)))
+      translateY(
+        calc(
+          (max(var(--offset), -1 * var(--offset)) - (var(--n) - 1) / 2) * 3px
+        )
+      );
+    transition:
+      transform var(--beat) var(--ease-settle),
+      filter var(--beat) ease;
+    transform-origin: bottom center;
+  }
+
+  .hand-card-playable:hover,
+  .hand-card-playable:focus-visible {
+    transform: rotate(calc(var(--offset) * var(--spread)))
+      translateY(
+        calc(
+          (max(var(--offset), -1 * var(--offset)) - (var(--n) - 1) / 2) * 3px -
+            16px
+        )
+      )
+      scale(1.06);
+    z-index: 30;
+  }
+
+  .hand-card-blocked {
+    filter: saturate(0.35) brightness(0.62);
+    cursor: not-allowed;
+  }
+
+  /* ------------------------------------------------------------------ panel */
+
+  .panel {
+    background: linear-gradient(
+      180deg,
+      rgba(22, 38, 61, 0.92),
+      rgba(16, 28, 46, 0.92)
+    );
+    border: 1px solid var(--ink-line, #22374f);
+    border-radius: 14px;
+    backdrop-filter: blur(6px);
+  }
+
+  .rule-brass {
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 162, 39, 0.55),
+      transparent
+    );
+  }
+
+  .btn {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    border-radius: 10px;
+    transition:
+      transform 120ms ease,
+      background-color 160ms ease,
+      opacity 160ms ease;
+  }
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--marigold);
+    color: #17223a;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: #ffbc51;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--chalk);
+    border: 1px solid rgba(201, 162, 39, 0.4);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(201, 162, 39, 0.12);
+  }
+}
+
+/* ------------------------------------------------------------------ motion */
+
+@keyframes deal-in {
+  from {
+    opacity: 0;
+    transform: translateY(60px) rotate(0deg) scale(0.86);
+  }
+}
+
+@keyframes land-on-table {
+  from {
+    opacity: 0;
+    transform: translateY(-38px) scale(1.16) rotate(var(--land-tilt, 0deg));
+  }
+}
+
+@keyframes sweep-away {
+  to {
+    opacity: 0;
+    transform: translate(var(--sweep-x, 0), var(--sweep-y, -70px)) scale(0.7);
+  }
+}
+
+@keyframes stamp-slam {
+  0% {
+    opacity: 0;
+    transform: scale(2.6) rotate(-22deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.92) rotate(-7deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-9deg);
+  }
+}
+
+@keyframes turn-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(242, 169, 59, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 9px rgba(242, 169, 59, 0);
+  }
+}
+
+@keyframes flash-brass {
+  from {
+    background-color: rgba(242, 169, 59, 0.4);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+.anim-deal {
+  animation: deal-in 420ms var(--ease-settle) backwards;
+  animation-delay: calc(var(--i) * 45ms);
+}
+.anim-land {
+  animation: land-on-table 320ms var(--ease-settle) backwards;
+}
+.anim-sweep {
+  animation: sweep-away var(--sweep) cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+.anim-stamp {
+  animation: stamp-slam 520ms var(--ease-settle) backwards;
+}
+.anim-turn {
+  animation: turn-pulse 1.9s ease-out infinite;
+}
+.anim-flash {
+  animation: flash-brass 900ms ease-out;
+}
+.anim-rise {
+  animation: rise-in 260ms ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .hand-card-playable:hover,
+  .hand-card-playable:focus-visible {
+    transform: rotate(calc(var(--offset) * var(--spread))) translateY(-14px);
+  }
 }
